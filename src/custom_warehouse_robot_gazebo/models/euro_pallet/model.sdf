@@ -1,0 +1,59 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="euro_pallet">
+    <static>false</static>
+    <link name="pallet_link">
+      <inertial>
+        <pose>0 0 0.07 0 0 0</pose>
+        <mass>12.0</mass>
+        <inertia>
+          <ixx>0.8</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>1.6</iyy><iyz>0</iyz>
+          <izz>2.2</izz>
+        </inertia>
+      </inertial>
+
+      <!-- Top Deck Slats -->
+      <visual name="top_deck_vis">
+        <pose>0 0 0.13 0 0 0</pose>
+        <geometry><box><size>1.20 0.80 0.025</size></box></geometry>
+        <material><ambient>0.76 0.60 0.42 1</ambient><diffuse>0.76 0.60 0.42 1</diffuse></material>
+      </visual>
+      <collision name="top_deck_col">
+        <pose>0 0 0.13 0 0 0</pose>
+        <geometry><box><size>1.20 0.80 0.025</size></box></geometry>
+      </collision>
+
+      <!-- 3 Longitudinal Runner Blocks -->
+      <visual name="runner_left_vis">
+        <pose>0 0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_left_col">
+        <pose>0 0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+
+      <visual name="runner_mid_vis">
+        <pose>0 0 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_mid_col">
+        <pose>0 0 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+
+      <visual name="runner_right_vis">
+        <pose>0 -0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_right_col">
+        <pose>0 -0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

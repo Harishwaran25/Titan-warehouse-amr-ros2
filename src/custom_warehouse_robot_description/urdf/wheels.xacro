@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- DRIVE WHEEL MACRO -->
+  <xacro:macro name="drive_wheel" params="prefix y_offset reflect">
+    <link name="${prefix}_wheel">
+      <!-- Outer Rubber Tire -->
+      <visual>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="0.08" length="0.045"/>
+        </geometry>
+        <material name="rubber_black"/>
+      </visual>
+
+      <!-- Inner Alloy Rim -->
+      <visual>
+        <origin xyz="0 ${reflect * 0.005} 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="0.055" length="0.047"/>
+        </geometry>
+        <material name="rim_blue"/>
+      </visual>
+
+      <!-- Wheel Axle Hub Cap -->
+      <visual>
+        <origin xyz="0 ${reflect * 0.015} 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="0.025" length="0.035"/>
+        </geometry>
+        <material name="light_grey"/>
+      </visual>
+
+      <collision>
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+        <geometry>
+          <cylinder radius="0.08" length="0.045"/>
+        </geometry>
+      </collision>
+
+      <xacro:inertial_cylinder mass="2.5" length="0.045" radius="0.08">
+        <origin xyz="0 0 0" rpy="${pi/2} 0 0"/>
+      </xacro:inertial_cylinder>
+    </link>
+
+    <joint name="${prefix}_wheel_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${prefix}_wheel"/>
+      <origin xyz="0 ${y_offset} 0" rpy="0 0 0"/>
+      <axis xyz="0 1 0"/>
+    </joint>
+
+    <gazebo reference="${prefix}_wheel">
+      <material>Gazebo/FlatBlack</material>
+      <mu1>1.8</mu1>
+      <mu2>1.8</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+      <maxVel>1.5</maxVel>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- INSTANTIATE DRIVE WHEELS -->
+  <xacro:drive_wheel prefix="left" y_offset="0.27" reflect="1"/>
+  <xacro:drive_wheel prefix="right" y_offset="-0.27" reflect="-1"/>
+
+  <!-- CASTER WHEEL MACRO -->
+  <xacro:macro name="caster_wheel" params="prefix x_offset y_offset">
+    <!-- Caster Bracket / Swivel Mount -->
+    <link name="${prefix}_caster_mount">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.03" length="0.04"/>
+        </geometry>
+        <material name="anthracite_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <cylinder radius="0.03" length="0.04"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_cylinder mass="0.5" length="0.04" radius="0.03">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_cylinder>
+    </link>
+
+    <joint name="${prefix}_caster_mount_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_caster_mount"/>
+      <origin xyz="${x_offset} ${y_offset} -0.025" rpy="0 0 0"/>
+    </joint>
+
+    <!-- Caster Rolling Wheel -->
+    <link name="${prefix}_caster_wheel">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="0.035"/>
+        </geometry>
+        <material name="rubber_black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <sphere radius="0.035"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_sphere mass="0.8" radius="0.035">
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+      </xacro:inertial_sphere>
+    </link>
+
+    <joint name="${prefix}_caster_wheel_joint" type="fixed">
+      <parent link="${prefix}_caster_mount"/>
+      <child link="${prefix}_caster_wheel"/>
+      <origin xyz="0 0 -0.02" rpy="0 0 0"/>
+    </joint>
+
+    <gazebo reference="${prefix}_caster_wheel">
+      <material>Gazebo/DarkGrey</material>
+      <mu1>0.001</mu1>
+      <mu2>0.001</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- 4-POINT STABILITY CASTERS -->
+  <xacro:caster_wheel prefix="front_left" x_offset="0.32" y_offset="0.18"/>
+  <xacro:caster_wheel prefix="front_right" x_offset="0.32" y_offset="-0.18"/>
+  <xacro:caster_wheel prefix="rear_left" x_offset="-0.32" y_offset="0.18"/>
+  <xacro:caster_wheel prefix="rear_right" x_offset="-0.32" y_offset="-0.18"/>
+
+</robot>

@@ -1,0 +1,131 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="charging_dock">
+    <static>true</static>
+    <link name="dock_link">
+      <!-- Base Floor Plate -->
+      <visual name="base_plate_vis">
+        <pose>0.2 0 0.005 0 0 0</pose>
+        <geometry>
+          <box><size>0.6 0.8 0.01</size></box>
+        </geometry>
+        <material>
+          <ambient>0.2 0.2 0.2 1</ambient>
+          <diffuse>0.3 0.3 0.3 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Main Back Wall Column -->
+      <visual name="column_vis">
+        <pose>-0.05 0 0.4 0 0 0</pose>
+        <geometry>
+          <box><size>0.15 0.6 0.8</size></box>
+        </geometry>
+        <material>
+          <ambient>0.1 0.1 0.12 1</ambient>
+          <diffuse>0.15 0.15 0.18 1</diffuse>
+        </material>
+      </visual>
+      <collision name="column_col">
+        <pose>-0.05 0 0.4 0 0 0</pose>
+        <geometry>
+          <box><size>0.15 0.6 0.8</size></box>
+        </geometry>
+      </collision>
+
+      <!-- Left Wheel Guide Funnel (Angled) -->
+      <visual name="left_funnel_vis">
+        <pose>0.2 0.35 0.06 0 0 -0.2</pose>
+        <geometry>
+          <box><size>0.5 0.06 0.12</size></box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.7 0.0 1</ambient>
+          <diffuse>0.95 0.75 0.05 1</diffuse>
+        </material>
+      </visual>
+      <collision name="left_funnel_col">
+        <pose>0.2 0.35 0.06 0 0 -0.2</pose>
+        <geometry>
+          <box><size>0.5 0.06 0.12</size></box>
+        </geometry>
+      </collision>
+
+      <!-- Right Wheel Guide Funnel (Angled) -->
+      <visual name="right_funnel_vis">
+        <pose>0.2 -0.35 0.06 0 0 0.2</pose>
+        <geometry>
+          <box><size>0.5 0.06 0.12</size></box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.7 0.0 1</ambient>
+          <diffuse>0.95 0.75 0.05 1</diffuse>
+        </material>
+      </visual>
+      <collision name="right_funnel_col">
+        <pose>0.2 -0.35 0.06 0 0 0.2</pose>
+        <geometry>
+          <box><size>0.5 0.06 0.12</size></box>
+        </geometry>
+      </collision>
+
+      <!-- Charging Terminals (Spring contacts) -->
+      <visual name="charge_terminal_left_vis">
+        <pose>0.03 0.10 0.10 0 0 0</pose>
+        <geometry>
+          <box><size>0.04 0.06 0.05</size></box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.8 0.1 1</ambient>
+          <diffuse>0.95 0.85 0.2 1</diffuse>
+        </material>
+      </visual>
+      <visual name="charge_terminal_right_vis">
+        <pose>0.03 -0.10 0.10 0 0 0</pose>
+        <geometry>
+          <box><size>0.04 0.06 0.05</size></box>
+        </geometry>
+        <material>
+          <ambient>0.9 0.8 0.1 1</ambient>
+          <diffuse>0.95 0.85 0.2 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Visual Fiducial / Marker Target Panel for Camera Recognition -->
+      <visual name="fiducial_panel_vis">
+        <pose>0.03 0 0.35 0 0 0</pose>
+        <geometry>
+          <box><size>0.01 0.25 0.25</size></box>
+        </geometry>
+        <material>
+          <ambient>1 1 1 1</ambient>
+          <diffuse>1 1 1 1</diffuse>
+        </material>
+      </visual>
+      <!-- Visual Fiducial Black Center Square (ArUco / Tag pattern) -->
+      <visual name="fiducial_marker_vis">
+        <pose>0.036 0 0.35 0 0 0</pose>
+        <geometry>
+          <box><size>0.005 0.16 0.16</size></box>
+        </geometry>
+        <material>
+          <ambient>0 0 0 1</ambient>
+          <diffuse>0 0 0 1</diffuse>
+        </material>
+      </visual>
+
+      <!-- Status Indicator Light (Green / Blue Glow) -->
+      <visual name="status_light_vis">
+        <pose>-0.05 0 0.82 0 0 0</pose>
+        <geometry>
+          <cylinder><radius>0.04</radius><length>0.05</length></cylinder>
+        </geometry>
+        <material>
+          <ambient>0 1 0.2 1</ambient>
+          <diffuse>0 1 0.2 1</diffuse>
+          <emissive>0 0.8 0.2 1</emissive>
+        </material>
+      </visual>
+    </link>
+  </model>
+</sdf>

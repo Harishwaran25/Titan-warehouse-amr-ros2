@@ -1,0 +1,143 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- BASE FOOTPRINT (Ground Projection) -->
+  <link name="base_footprint"/>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.08" rpy="0 0 0"/>
+  </joint>
+
+  <!-- BASE LINK (Chassis Structural Core) -->
+  <link name="base_link">
+    <!-- Main Center Core Body -->
+    <visual>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.80 0.50 0.16"/>
+      </geometry>
+      <material name="anthracite_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.06" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.80 0.50 0.16"/>
+      </geometry>
+    </collision>
+
+    <!-- Front Chamfered Safety Bumper -->
+    <visual>
+      <origin xyz="0.41 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.48 0.12"/>
+      </geometry>
+      <material name="industrial_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="0.41 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.48 0.12"/>
+      </geometry>
+    </collision>
+
+    <!-- Rear Chamfered Bumper with Docking Recess -->
+    <visual>
+      <origin xyz="-0.41 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.48 0.12"/>
+      </geometry>
+      <material name="industrial_orange"/>
+    </visual>
+    <collision>
+      <origin xyz="-0.41 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.48 0.12"/>
+      </geometry>
+    </collision>
+
+    <!-- Side Skirt Protective Panels Left -->
+    <visual>
+      <origin xyz="0 0.255 0.03" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.74 0.02 0.10"/>
+      </geometry>
+      <material name="industrial_orange"/>
+    </visual>
+
+    <!-- Side Skirt Protective Panels Right -->
+    <visual>
+      <origin xyz="0 -0.255 0.03" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.74 0.02 0.10"/>
+      </geometry>
+      <material name="industrial_orange"/>
+    </visual>
+
+    <!-- Front LED Status Light Bar (Cyan / Amber Navigation Indicator) -->
+    <visual>
+      <origin xyz="0.451 0 0.08" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.40 0.02"/>
+      </geometry>
+      <material name="led_cyan"/>
+    </visual>
+
+    <!-- Rear LED Status Light Bar (Brake & Docking Indicator) -->
+    <visual>
+      <origin xyz="-0.451 0 0.08" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.40 0.02"/>
+      </geometry>
+      <material name="led_amber"/>
+    </visual>
+
+    <!-- Emergency Stop Button 1 (Front Left) -->
+    <visual>
+      <origin xyz="0.35 0.21 0.15" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="0.025"/>
+      </geometry>
+      <material name="emergency_red"/>
+    </visual>
+
+    <!-- Emergency Stop Button 2 (Rear Right) -->
+    <visual>
+      <origin xyz="-0.35 -0.21 0.15" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.02" length="0.025"/>
+      </geometry>
+      <material name="emergency_red"/>
+    </visual>
+
+    <!-- Rear Auto-Docking Contact Plates (Left & Right Conductive Terminals) -->
+    <visual>
+      <origin xyz="-0.452 0.10 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.008 0.05 0.04"/>
+      </geometry>
+      <material name="docking_gold"/>
+    </visual>
+    <visual>
+      <origin xyz="-0.452 -0.10 0.02" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.008 0.05 0.04"/>
+      </geometry>
+      <material name="docking_gold"/>
+    </visual>
+
+    <!-- Inertial Parameters for AMR Chassis -->
+    <xacro:inertial_box mass="32.0" x="0.85" y="0.54" z="0.20">
+      <origin xyz="0 0 0.05" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <!-- Gazebo Material and Friction settings for Chassis -->
+  <gazebo reference="base_link">
+    <material>Gazebo/DarkGrey</material>
+    <mu1>0.2</mu1>
+    <mu2>0.2</mu2>
+  </gazebo>
+
+</robot>

@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- ==================== 1. 2D / 3D LIDAR SENSOR ==================== -->
+  <link name="lidar_mount">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.055" length="0.04"/>
+      </geometry>
+      <material name="anthracite_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.055" length="0.04"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="0.3" length="0.04" radius="0.055">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <joint name="lidar_mount_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="lidar_mount"/>
+    <origin xyz="0.25 0 0.16" rpy="0 0 0"/>
+  </joint>
+
+  <link name="lidar_link">
+    <!-- Scanner Lower Housing -->
+    <visual>
+      <origin xyz="0 0 0.015" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.045" length="0.03"/>
+      </geometry>
+      <material name="industrial_orange"/>
+    </visual>
+    <!-- Scanner Rotating Optical Window -->
+    <visual>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.042" length="0.025"/>
+      </geometry>
+      <material name="camera_black"/>
+    </visual>
+    <!-- Scanner Top Protective Cap -->
+    <visual>
+      <origin xyz="0 0 0.055" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.045" length="0.008"/>
+      </geometry>
+      <material name="anthracite_grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.035" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.048" length="0.07"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_cylinder mass="0.5" length="0.07" radius="0.045">
+      <origin xyz="0 0 0.035" rpy="0 0 0"/>
+    </xacro:inertial_cylinder>
+  </link>
+
+  <joint name="lidar_joint" type="fixed">
+    <parent link="lidar_mount"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 0.02" rpy="0 0 0"/>
+  </joint>
+
+
+  <!-- ==================== 2. RGB-D DEPTH CAMERA ==================== -->
+  <!-- Industrial Stereo Depth Camera (Intel RealSense D435i / OAK-D style) -->
+  <link name="camera_link">
+    <!-- Main Aluminum Housing -->
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.03 0.125 0.03"/>
+      </geometry>
+      <material name="anthracite_grey"/>
+    </visual>
+    <!-- Left Stereo IR Lens -->
+    <visual>
+      <origin xyz="0.015 0.045 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.004"/>
+      </geometry>
+      <material name="camera_black"/>
+    </visual>
+    <!-- RGB Center Sensor Lens -->
+    <visual>
+      <origin xyz="0.015 0.015 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.007" length="0.004"/>
+      </geometry>
+      <material name="sensor_blue"/>
+    </visual>
+    <!-- Right Stereo IR Lens -->
+    <visual>
+      <origin xyz="0.015 -0.045 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.008" length="0.004"/>
+      </geometry>
+      <material name="camera_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.03 0.125 0.03"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="0.15" x="0.03" y="0.125" z="0.03">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.43 0 0.11" rpy="0 0.087 0"/>
+  </joint>
+
+  <!-- Standard ROS Optical Frame (Z forward, X right, Y down) -->
+  <link name="camera_depth_optical_frame"/>
+  <joint name="camera_depth_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_depth_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+  <link name="camera_rgb_optical_frame"/>
+  <joint name="camera_rgb_optical_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_rgb_optical_frame"/>
+    <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+  </joint>
+
+
+  <!-- ==================== 3. 6-DOF IMU SENSOR ==================== -->
+  <link name="imu_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.025 0.01"/>
+      </geometry>
+      <material name="sensor_blue"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.025 0.025 0.01"/>
+      </geometry>
+    </collision>
+    <xacro:inertial_box mass="0.05" x="0.025" y="0.025" z="0.01">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:inertial_box>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.06" rpy="0 0 0"/>
+  </joint>
+
+
+  <!-- ==================== 4. CORNER ULTRASONIC RANGE SENSORS ==================== -->
+  <xacro:macro name="ultrasonic_sensor" params="prefix x_pos y_pos yaw_angle">
+    <link name="${prefix}_sonar_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.012" length="0.015"/>
+        </geometry>
+        <material name="anthracite_grey"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+        <geometry>
+          <cylinder radius="0.012" length="0.015"/>
+        </geometry>
+      </collision>
+      <xacro:inertial_cylinder mass="0.02" length="0.015" radius="0.012">
+        <origin xyz="0 0 0" rpy="0 1.5708 0"/>
+      </xacro:inertial_cylinder>
+    </link>
+
+    <joint name="${prefix}_sonar_joint" type="fixed">
+      <parent link="base_link"/>
+      <child link="${prefix}_sonar_link"/>
+      <origin xyz="${x_pos} ${y_pos} 0.04" rpy="0 0 ${yaw_angle}"/>
+    </joint>
+  </xacro:macro>
+
+  <xacro:ultrasonic_sensor prefix="front_left" x_pos="0.43" y_pos="0.22" yaw_angle="0.523"/>
+  <xacro:ultrasonic_sensor prefix="front_right" x_pos="0.43" y_pos="-0.22" yaw_angle="-0.523"/>
+  <xacro:ultrasonic_sensor prefix="rear_left" x_pos="-0.43" y_pos="0.22" yaw_angle="2.618"/>
+  <xacro:ultrasonic_sensor prefix="rear_right" x_pos="-0.43" y_pos="-0.22" yaw_angle="-2.618"/>
+
+</robot>
