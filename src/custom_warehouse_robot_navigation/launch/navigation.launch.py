@@ -23,7 +23,7 @@ def generate_launch_description():
         executable='controller_server',
         output='screen',
         parameters=[params_file, {'use_sim_time': use_sim_time}],
-        remappings=[('cmd_vel', '/cmd_vel')]
+        remappings=[('cmd_vel', 'cmd_vel_nav')]
     )
 
     planner_server_node = Node(
@@ -40,7 +40,7 @@ def generate_launch_description():
         name='behavior_server',
         output='screen',
         parameters=[params_file, {'use_sim_time': use_sim_time}],
-        remappings=[('cmd_vel', '/cmd_vel')]
+        remappings=[('cmd_vel', 'cmd_vel_nav')]
     )
 
     bt_navigator_node = Node(

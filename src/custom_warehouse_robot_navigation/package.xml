@@ -18,6 +18,10 @@
   <exec_depend>nav2_lifecycle_manager</exec_depend>
   <exec_depend>custom_warehouse_robot_description</exec_depend>
   <exec_depend>custom_warehouse_robot_gazebo</exec_depend>
+  <exec_depend>teleop_twist_keyboard</exec_depend>
+  <exec_depend>twist_mux</exec_depend>
+  <exec_depend>gazebo_msgs</exec_depend>
+  <exec_depend>rviz2</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

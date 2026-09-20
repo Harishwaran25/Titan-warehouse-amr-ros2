@@ -8,18 +8,21 @@ from launch_ros.actions import Node
 def generate_launch_description():
     pkg_nav = get_package_share_directory('custom_warehouse_robot_navigation')
     default_map_file = os.path.join(pkg_nav, 'maps', 'warehouse_map.yaml')
+    # NOTE: must NOT be named 'params_file' — gazebo_ros/gzserver.launch.py
+    # declares that arg with default '' and it leaks into the shared launch context.
     default_params_file = os.path.join(pkg_nav, 'config', 'nav2_params.yaml')
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    map_file = LaunchConfiguration('map', default=default_map_file)
-    params_file = LaunchConfiguration('params_file', default=default_params_file)
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    map_file = LaunchConfiguration('map')
+    params_file = LaunchConfiguration('localization_params_file')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
     declare_map_cmd = DeclareLaunchArgument(
         'map', default_value=default_map_file, description='Full path to map yaml file')
     declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file', default_value=default_params_file, description='Full path to Nav2 params file')
+        'localization_params_file', default_value=default_params_file,
+        description='Full path to Nav2 params file for map_server/amcl')
 
     map_server_node = Node(
         package='nav2_map_server',

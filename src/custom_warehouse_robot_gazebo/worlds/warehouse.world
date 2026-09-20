@@ -2,6 +2,14 @@
 <sdf version="1.6">
   <world name="warehouse_world">
 
+    <!-- Enables /get_entity_state and /set_entity_state (RViz pose → Gazebo) -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/</namespace>
+      </ros>
+      <update_rate>10.0</update_rate>
+    </plugin>
+
     <!-- Physics Engine Configuration -->
     <physics type="ode">
       <max_step_size>0.004</max_step_size>

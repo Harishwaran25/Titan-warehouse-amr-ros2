@@ -1,32 +1,44 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, SetEnvironmentVariable, TimerAction
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
+
 
 def generate_launch_description():
     pkg_gazebo_ros = get_package_share_directory('gazebo_ros')
     pkg_robot_desc = get_package_share_directory('custom_warehouse_robot_description')
     pkg_robot_gazebo = get_package_share_directory('custom_warehouse_robot_gazebo')
 
-    # Models path
     gazebo_models_path = os.path.join(pkg_robot_gazebo, 'models')
     desc_share = pkg_robot_desc
-    if 'GAZEBO_MODEL_PATH' in os.environ:
-        model_path = os.environ['GAZEBO_MODEL_PATH'] + ':' + gazebo_models_path
-    else:
-        model_path = gazebo_models_path
 
-    if 'GAZEBO_RESOURCE_PATH' in os.environ:
-        resource_path = os.environ['GAZEBO_RESOURCE_PATH'] + ':' + desc_share
-    else:
-        resource_path = desc_share
+    # Always keep Gazebo-11 system media/models/plugins. Overwriting RESOURCE_PATH
+    # with only the robot package breaks gzclient (Camera shared_ptr assert).
+    system_model = '/usr/share/gazebo-11/models'
+    system_resource = '/usr/share/gazebo-11:/usr/share/gazebo-11/media'
+    system_plugin = '/usr/lib/x86_64-linux-gnu/gazebo-11/plugins'
+
+    model_path = ':'.join(filter(None, [
+        os.environ.get('GAZEBO_MODEL_PATH', ''),
+        system_model,
+        gazebo_models_path,
+    ]))
+    resource_path = ':'.join(filter(None, [
+        os.environ.get('GAZEBO_RESOURCE_PATH', ''),
+        system_resource,
+        desc_share,
+    ]))
+    plugin_path = ':'.join(filter(None, [
+        os.environ.get('GAZEBO_PLUGIN_PATH', ''),
+        system_plugin,
+    ]))
 
     world_path = os.path.join(pkg_robot_gazebo, 'worlds', 'warehouse.world')
 
-    # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='-5.5')
@@ -34,7 +46,6 @@ def generate_launch_description():
     yaw_pose = LaunchConfiguration('yaw_pose', default='0.0')
     gui = LaunchConfiguration('gui', default='true')
 
-    # Declare arguments
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
     declare_x_cmd = DeclareLaunchArgument(
@@ -48,12 +59,11 @@ def generate_launch_description():
     declare_gui_cmd = DeclareLaunchArgument(
         'gui', default_value='true', description='Whether to start Gazebo GUI')
 
-    # Set Gazebo Model Path
     set_model_path_cmd = SetEnvironmentVariable('GAZEBO_MODEL_PATH', model_path)
     set_resource_path_cmd = SetEnvironmentVariable('GAZEBO_RESOURCE_PATH', resource_path)
+    set_plugin_path_cmd = SetEnvironmentVariable('GAZEBO_PLUGIN_PATH', plugin_path)
     set_no_db_cmd = SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', '')
 
-    # Robot State Publisher
     robot_state_publisher_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_robot_desc, 'launch', 'robot_state_publisher.launch.py')
@@ -61,7 +71,6 @@ def generate_launch_description():
         launch_arguments={'use_sim_time': use_sim_time}.items()
     )
 
-    # Gazebo Server
     gzserver_cmd = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
@@ -69,32 +78,42 @@ def generate_launch_description():
         launch_arguments={'world': world_path}.items()
     )
 
-    # Gazebo Client (GUI)
-    gzclient_cmd = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
-        ),
-        launch_arguments={'gui': gui}.items()
+    # Start GUI after world + spawn so rendering camera initializes cleanly
+    gzclient_cmd = TimerAction(
+        period=6.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_gazebo_ros, 'launch', 'gzclient.launch.py')
+                ),
+                condition=IfCondition(gui),
+            )
+        ]
     )
 
-    # Spawn Robot Entity in Gazebo
-    spawn_robot_cmd = Node(
-        package='gazebo_ros',
-        executable='spawn_entity.py',
-        arguments=[
-            '-entity', 'titan_warehouse_amr',
-            '-topic', 'robot_description',
-            '-x', x_pose,
-            '-y', y_pose,
-            '-z', z_pose,
-            '-Y', yaw_pose
-        ],
-        output='screen'
+    spawn_robot_cmd = TimerAction(
+        period=2.0,
+        actions=[
+            Node(
+                package='gazebo_ros',
+                executable='spawn_entity.py',
+                arguments=[
+                    '-entity', 'titan_warehouse_amr',
+                    '-topic', 'robot_description',
+                    '-x', x_pose,
+                    '-y', y_pose,
+                    '-z', z_pose,
+                    '-Y', yaw_pose
+                ],
+                output='screen'
+            )
+        ]
     )
 
     return LaunchDescription([
         set_model_path_cmd,
         set_resource_path_cmd,
+        set_plugin_path_cmd,
         set_no_db_cmd,
         declare_use_sim_time_cmd,
         declare_x_cmd,
@@ -104,6 +123,6 @@ def generate_launch_description():
         declare_gui_cmd,
         robot_state_publisher_cmd,
         gzserver_cmd,
+        spawn_robot_cmd,
         gzclient_cmd,
-        spawn_robot_cmd
     ])

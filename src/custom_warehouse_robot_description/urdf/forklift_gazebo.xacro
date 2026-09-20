@@ -56,19 +56,21 @@
       <wheel_separation>0.48</wheel_separation>
       <wheel_diameter>0.10</wheel_diameter>
 
-      <max_wheel_torque>80.0</max_wheel_torque>
-      <max_wheel_acceleration>2.0</max_wheel_acceleration>
+      <!-- Encoder odom from joints (more consistent wheel "ticks"/integration) -->
+      <max_wheel_torque>8.0</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
 
       <command_topic>cmd_vel</command_topic>
       <publish_odom>true</publish_odom>
       <publish_odom_tf>true</publish_odom_tf>
-      <publish_wheel_tf>true</publish_wheel_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
       <odometry_topic>odom</odometry_topic>
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_footprint</robot_base_frame>
 
       <update_rate>50.0</update_rate>
-      <odometry_source>0</odometry_source>
+      <!-- 1 = ENCODER (joint integration). More stable with AMCL while teleoping. -->
+      <odometry_source>1</odometry_source>
     </plugin>
   </gazebo>
 
@@ -90,21 +92,23 @@
       <ray>
         <scan>
           <horizontal>
-            <samples>720</samples>
+            <!-- 275° FOV centered forward (±137.5°) -->
+            <samples>550</samples>
             <resolution>1</resolution>
-            <min_angle>-3.14159265</min_angle>
-            <max_angle>3.14159265</max_angle>
+            <min_angle>-2.3998277</min_angle>
+            <max_angle>2.3998277</max_angle>
           </horizontal>
         </scan>
         <range>
-          <min>0.12</min>
+          <!-- Keep min range above robot body to avoid self-hits as false obstacles -->
+          <min>0.30</min>
           <max>25.0</max>
           <resolution>0.01</resolution>
         </range>
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.008</stddev>
+          <stddev>0.005</stddev>
         </noise>
       </ray>
       <plugin name="laser_controller" filename="libgazebo_ros_ray_sensor.so">
