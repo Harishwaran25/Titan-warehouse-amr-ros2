@@ -13,18 +13,24 @@ def generate_launch_description():
 
     # Models path
     gazebo_models_path = os.path.join(pkg_robot_gazebo, 'models')
+    desc_share = pkg_robot_desc
     if 'GAZEBO_MODEL_PATH' in os.environ:
         model_path = os.environ['GAZEBO_MODEL_PATH'] + ':' + gazebo_models_path
     else:
         model_path = gazebo_models_path
 
+    if 'GAZEBO_RESOURCE_PATH' in os.environ:
+        resource_path = os.environ['GAZEBO_RESOURCE_PATH'] + ':' + desc_share
+    else:
+        resource_path = desc_share
+
     world_path = os.path.join(pkg_robot_gazebo, 'worlds', 'warehouse.world')
 
     # Launch Configurations
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    x_pose = LaunchConfiguration('x_pose', default='-8.0')
+    x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='-5.5')
-    z_pose = LaunchConfiguration('z_pose', default='0.05')
+    z_pose = LaunchConfiguration('z_pose', default='0.08')
     yaw_pose = LaunchConfiguration('yaw_pose', default='0.0')
     gui = LaunchConfiguration('gui', default='true')
 
@@ -32,11 +38,11 @@ def generate_launch_description():
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
     declare_x_cmd = DeclareLaunchArgument(
-        'x_pose', default_value='-8.0', description='Initial X position')
+        'x_pose', default_value='0.0', description='Initial X position')
     declare_y_cmd = DeclareLaunchArgument(
         'y_pose', default_value='-5.5', description='Initial Y position')
     declare_z_cmd = DeclareLaunchArgument(
-        'z_pose', default_value='0.05', description='Initial Z position')
+        'z_pose', default_value='0.08', description='Initial Z position')
     declare_yaw_cmd = DeclareLaunchArgument(
         'yaw_pose', default_value='0.0', description='Initial Yaw orientation')
     declare_gui_cmd = DeclareLaunchArgument(
@@ -44,6 +50,8 @@ def generate_launch_description():
 
     # Set Gazebo Model Path
     set_model_path_cmd = SetEnvironmentVariable('GAZEBO_MODEL_PATH', model_path)
+    set_resource_path_cmd = SetEnvironmentVariable('GAZEBO_RESOURCE_PATH', resource_path)
+    set_no_db_cmd = SetEnvironmentVariable('GAZEBO_MODEL_DATABASE_URI', '')
 
     # Robot State Publisher
     robot_state_publisher_cmd = IncludeLaunchDescription(
@@ -86,6 +94,8 @@ def generate_launch_description():
 
     return LaunchDescription([
         set_model_path_cmd,
+        set_resource_path_cmd,
+        set_no_db_cmd,
         declare_use_sim_time_cmd,
         declare_x_cmd,
         declare_y_cmd,

@@ -18,8 +18,7 @@ slam_toolbox:
     # Update frequencies
     map_update_interval: 2.0
     transform_publish_period: 0.02 # 50 Hz
-    map_file_name: warehouse_slam_map
-    map_start_pose: [-8.0, -5.5, 0.0]
+    map_start_pose: [0.0, -5.5, 0.0]
 
     # Processing Parameters
     throttle_scans: 1

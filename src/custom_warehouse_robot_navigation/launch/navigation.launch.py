@@ -9,13 +9,14 @@ def generate_launch_description():
     pkg_nav = get_package_share_directory('custom_warehouse_robot_navigation')
     default_params_file = os.path.join(pkg_nav, 'config', 'nav2_params.yaml')
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    params_file = LaunchConfiguration('params_file', default=default_params_file)
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    params_file = LaunchConfiguration('nav_params_file')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
     declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file', default_value=default_params_file, description='Full path to Nav2 params file')
+        'nav_params_file', default_value=default_params_file,
+        description='Full path to Nav2 params file')
 
     controller_server_node = Node(
         package='nav2_controller',

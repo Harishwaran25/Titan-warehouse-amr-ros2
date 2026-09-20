@@ -11,9 +11,9 @@ def generate_launch_description():
     default_slam_params = os.path.join(pkg_nav, 'config', 'slam_toolbox_params.yaml')
     default_cartographer_config = os.path.join(pkg_nav, 'config')
 
-    use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    slam_type = LaunchConfiguration('slam_type', default='slam_toolbox')
-    params_file = LaunchConfiguration('params_file', default=default_slam_params)
+    use_sim_time = LaunchConfiguration('use_sim_time')
+    slam_type = LaunchConfiguration('slam_type')
+    params_file = LaunchConfiguration('slam_params_file')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
@@ -21,7 +21,7 @@ def generate_launch_description():
         'slam_type', default_value='slam_toolbox',
         description='SLAM method: slam_toolbox or cartographer')
     declare_params_file_cmd = DeclareLaunchArgument(
-        'params_file', default_value=default_slam_params,
+        'slam_params_file', default_value=default_slam_params,
         description='Full path to SLAM parameters file')
 
     # SLAM Toolbox Node

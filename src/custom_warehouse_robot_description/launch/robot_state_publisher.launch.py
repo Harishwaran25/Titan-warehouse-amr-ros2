@@ -4,14 +4,20 @@ from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration, Command
 from launch_ros.actions import Node
+from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg_share = get_package_share_directory('custom_warehouse_robot_description')
-    xacro_file = os.path.join(pkg_share, 'urdf', 'robot.urdf.xacro')
+    xacro_file = os.path.join(pkg_share, 'urdf', 'forklift.urdf.xacro')
+    # Absolute mesh path so Gazebo can load STL visuals reliably
+    mesh_dir = 'file://' + os.path.join(pkg_share, 'meshes')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='false')
 
-    robot_description_cmd = Command(['xacro ', xacro_file])
+    robot_description = ParameterValue(
+        Command(['xacro ', xacro_file, ' mesh_dir:=', mesh_dir]),
+        value_type=str
+    )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -24,7 +30,7 @@ def generate_launch_description():
         executable='robot_state_publisher',
         output='screen',
         parameters=[{
-            'robot_description': robot_description_cmd,
+            'robot_description': robot_description,
             'use_sim_time': use_sim_time
         }]
     )

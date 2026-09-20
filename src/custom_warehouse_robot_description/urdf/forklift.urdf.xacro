@@ -1,0 +1,222 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="forklift">
+
+  <!-- ================= FRAME CONVENTIONS =================
+       Fusion ("model") frame: Z up, forks point to +Y, wheel axle along X.
+       ROS frame: X forward, Y left, Z up.
+       model_yaw = yaw of the Fusion frame as seen from base_link.
+         -pi/2 : forks are the FRONT of the robot
+         +pi/2 : forks are the BACK (used here)
+       Meshes come from export_meshes.py: metres, Fusion world frame. -->
+  <!-- Meshes: override mesh_dir from launch with file:// for Gazebo visibility -->
+  <xacro:arg name="mesh_dir" default="package://custom_warehouse_robot_description/meshes"/>
+  <xacro:property name="model_yaw" value="${pi/2}"/>
+  <xacro:property name="mesh_dir" value="$(arg mesh_dir)"/>
+
+  <!-- Fusion world position (m) of the wheel-axle midpoint = base_link origin -->
+  <xacro:property name="p0x" value="0.21"/>
+  <xacro:property name="p0y" value="-0.105"/>
+  <xacro:property name="p0z" value="-0.02"/>
+
+  <!-- Wheels: 100 mm diameter, 45 mm wide, track 0.48 m -->
+  <xacro:property name="wheel_r" value="0.05"/>
+  <xacro:property name="wheel_w" value="0.045"/>
+
+  <!-- Casters: axle at y=0.245, z=-0.0481; ground is z=-0.07 -->
+  <xacro:property name="caster_y" value="0.245"/>
+  <xacro:property name="caster_z" value="-0.0481"/>
+  <xacro:property name="caster_r" value="0.0219"/>
+
+  <!-- Fork slider origin (Fusion Slider 48) -->
+  <xacro:property name="fx" value="0.2095"/>
+  <xacro:property name="fy" value="0.037"/>
+  <xacro:property name="fz" value="0.1123"/>
+  <!-- Limits measured from the pose the meshes were exported in.
+       Export with the carriage at its LOWER limit (-0.1 in Fusion) -> 0 .. 0.3 -->
+  <xacro:property name="fork_lower" value="0.0"/>
+  <xacro:property name="fork_upper" value="0.3"/>
+
+  <!-- Masses (kg). Fusion values come from default materials (steel).
+       TODO: replace with weighed values. -->
+  <xacro:property name="chassis_mass" value="32.9895"/>
+  <xacro:property name="wheel_mass" value="1.9402"/>
+  <xacro:property name="fork_mass" value="2.3717"/>
+  <xacro:property name="caster_mass" value="0.1227"/>
+  <xacro:property name="lidar_mass" value="0.1"/>
+  <xacro:property name="imu_mass" value="0.001"/>
+  <!-- Chassis box for inertia. TODO: use size from mesh_report.txt (base_link) -->
+  <xacro:property name="chassis_x" value="0.40"/>
+  <xacro:property name="chassis_y" value="0.544"/>
+  <xacro:property name="chassis_z" value="0.585"/>
+
+  <!-- ================= MACROS ================= -->
+  <xacro:macro name="box_inertial" params="m x y z cx cy cz">
+    <inertial>
+      <origin xyz="${cx} ${cy} ${cz}" rpy="0 0 0"/>
+      <mass value="${m}"/>
+      <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0"
+               iyy="${m*(x*x+z*z)/12}" iyz="0"
+               izz="${m*(x*x+y*y)/12}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- px,py,pz = Fusion world position of the link frame origin -->
+  <xacro:macro name="mesh_visual" params="file px py pz">
+    <visual>
+      <origin xyz="${-px} ${-py} ${-pz}" rpy="0 0 0"/>
+      <geometry><mesh filename="${mesh_dir}/${file}.stl"/></geometry>
+    </visual>
+  </xacro:macro>
+
+  <xacro:macro name="mesh_collision" params="file px py pz">
+    <collision>
+      <origin xyz="${-px} ${-py} ${-pz}" rpy="0 0 0"/>
+      <geometry><mesh filename="${mesh_dir}/${file}.stl"/></geometry>
+    </collision>
+  </xacro:macro>
+
+  <xacro:macro name="wheel" params="name mesh px">
+    <link name="${name}">
+      <xacro:mesh_visual file="${mesh}" px="${px}" py="${p0y}" pz="${p0z}"/>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+      </collision>
+      <inertial>
+        <mass value="${wheel_mass}"/>
+        <inertia ixx="${wheel_mass*wheel_r*wheel_r/2}" ixy="0" ixz="0"
+                 iyy="${wheel_mass*(3*wheel_r*wheel_r+wheel_w*wheel_w)/12}" iyz="0"
+                 izz="${wheel_mass*(3*wheel_r*wheel_r+wheel_w*wheel_w)/12}"/>
+      </inertial>
+    </link>
+    <joint name="${name}_joint" type="continuous">
+      <parent link="chassis"/>
+      <child link="${name}"/>
+      <origin xyz="${px-p0x} 0 0" rpy="0 0 0"/>
+      <!-- same axis for both wheels = ROS +Y, so positive velocity drives forward -->
+      <axis xyz="${sin(model_yaw)} ${cos(model_yaw)} 0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- Fixed caster: sphere collision. Make it frictionless in the simulator. -->
+  <xacro:macro name="caster" params="name mesh px">
+    <link name="${name}">
+      <xacro:mesh_visual file="${mesh}" px="${px}" py="${caster_y}" pz="${caster_z}"/>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry><sphere radius="${caster_r}"/></geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 -0.012 0.0128" rpy="0 0 0"/>
+        <mass value="${caster_mass}"/>
+        <inertia ixx="${0.4*caster_mass*caster_r*caster_r}" ixy="0" ixz="0"
+                 iyy="${0.4*caster_mass*caster_r*caster_r}" iyz="0"
+                 izz="${0.4*caster_mass*caster_r*caster_r}"/>
+      </inertial>
+    </link>
+    <joint name="${name}_joint" type="fixed">
+      <parent link="chassis"/>
+      <child link="${name}"/>
+      <origin xyz="${px-p0x} ${caster_y-p0y} ${caster_z-p0z}" rpy="0 0 0"/>
+    </joint>
+  </xacro:macro>
+
+  <!-- ================= BASE ================= -->
+  <link name="base_footprint"/>
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 ${wheel_r}" rpy="0 0 0"/>
+  </joint>
+
+  <!-- base_link: ROS-aligned frame at the wheel-axle midpoint, no geometry -->
+  <link name="base_link"/>
+  <joint name="chassis_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="chassis"/>
+    <origin xyz="0 0 0" rpy="0 0 ${model_yaw}"/>
+  </joint>
+
+  <!-- chassis: Fusion-aligned frame at the same point; carries the big mesh -->
+  <link name="chassis">
+    <xacro:mesh_visual file="base_link" px="${p0x}" py="${p0y}" pz="${p0z}"/>
+    <!-- Box collision (mesh collision is too heavy for Gazebo realtime) -->
+    <collision>
+      <origin xyz="0 0 ${chassis_z/2}" rpy="0 0 0"/>
+      <geometry><box size="${chassis_x} ${chassis_y} ${chassis_z}"/></geometry>
+    </collision>
+    <xacro:box_inertial m="${chassis_mass}" x="${chassis_x}" y="${chassis_y}" z="${chassis_z}"
+                        cx="-0.0002" cy="0.0117" cz="0.1748"/>
+  </link>
+
+  <!-- ================= WHEELS =================
+       Forks at rear (model_yaw=+pi/2): Fusion left/right match ROS left/right. -->
+  <xacro:wheel name="left_wheel"  mesh="left_wheel"  px="0.45"/>
+  <xacro:wheel name="right_wheel" mesh="right_wheel" px="-0.03"/>
+
+  <!-- ================= CASTERS ================= -->
+  <xacro:caster name="caster_left"  mesh="caster_left"  px="0.3846"/>
+  <xacro:caster name="caster_right" mesh="caster_right" px="0.0304"/>
+
+  <!-- ================= FORK CARRIAGE ================= -->
+  <link name="fork_carriage">
+    <xacro:mesh_visual file="fork_carriage" px="${fx}" py="${fy}" pz="${fz}"/>
+    <collision>
+      <origin xyz="0 ${0.24} ${-0.03}" rpy="0 0 0"/>
+      <geometry><box size="0.306 0.617 0.08"/></geometry>
+    </collision>
+    <xacro:box_inertial m="${fork_mass}" x="0.306" y="0.617" z="0.136"
+                        cx="0" cy="0.2403" cz="-0.0606"/>
+  </link>
+  <joint name="fork_lift_joint" type="prismatic">
+    <parent link="chassis"/>
+    <child link="fork_carriage"/>
+    <origin xyz="${fx-p0x} ${fy-p0y} ${fz-p0z}" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="${fork_lower}" upper="${fork_upper}" effort="100" velocity="0.05"/>
+  </joint>
+
+  <!-- ================= LIDAR =================
+       lidar_base holds the mesh (Fusion-aligned); lidar_link is the ROS-aligned
+       sensor frame. Move lidar_link up/down to the real scan plane if needed. -->
+  <link name="lidar_base">
+    <xacro:mesh_visual file="lidar_link" px="0.2093" py="-0.1107" pz="0.3437"/>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry><box size="0.0605 0.096 0.048"/></geometry>
+    </collision>
+    <xacro:box_inertial m="${lidar_mass}" x="0.0605" y="0.096" z="0.048" cx="0" cy="0" cz="0"/>
+  </link>
+  <joint name="lidar_base_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="lidar_base"/>
+    <origin xyz="${0.2093-p0x} ${-0.1107-p0y} ${0.3437-p0z}" rpy="0 0 0"/>
+  </joint>
+  <link name="lidar_link"/>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="lidar_base"/>
+    <child link="lidar_link"/>
+    <origin xyz="0 0 0" rpy="0 0 ${-model_yaw}"/>
+  </joint>
+
+  <!-- ================= IMU ================= -->
+  <link name="imu_base">
+    <xacro:mesh_visual file="imu_link" px="0.2097" py="-0.1143" pz="0.3111"/>
+    <xacro:box_inertial m="${imu_mass}" x="0.028" y="0.0324" z="0.0137" cx="0" cy="0" cz="0"/>
+  </link>
+  <joint name="imu_base_joint" type="fixed">
+    <parent link="chassis"/>
+    <child link="imu_base"/>
+    <origin xyz="${0.2097-p0x} ${-0.1143-p0y} ${0.3111-p0z}" rpy="0 0 0"/>
+  </joint>
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <parent link="imu_base"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0" rpy="0 0 ${-model_yaw}"/>
+  </joint>
+
+  <!-- Gazebo simulation plugins (diff drive, lidar, imu) -->
+  <xacro:include filename="forklift_gazebo.xacro"/>
+
+</robot>
