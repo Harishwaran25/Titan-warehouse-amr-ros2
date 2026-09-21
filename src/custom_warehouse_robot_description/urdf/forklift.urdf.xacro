@@ -95,6 +95,8 @@
       <origin xyz="${px-p0x} 0 0" rpy="0 0 0"/>
       <!-- same axis for both wheels = ROS +Y, so positive velocity drives forward -->
       <axis xyz="${sin(model_yaw)} ${cos(model_yaw)} 0"/>
+      <!-- Damping so wheels actually stop when diff-drive commands zero speed -->
+      <dynamics damping="1.0" friction="0.2"/>
     </joint>
   </xacro:macro>
 

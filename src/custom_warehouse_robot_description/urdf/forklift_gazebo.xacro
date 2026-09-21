@@ -22,18 +22,26 @@
     <maxVel>1.5</maxVel>
   </gazebo>
 
+  <!-- Help ODE joint motors enforce zero wheel speed when idle -->
+  <gazebo reference="left_wheel_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+  </gazebo>
+  <gazebo reference="right_wheel_joint">
+    <implicitSpringDamper>true</implicitSpringDamper>
+  </gazebo>
+
   <gazebo reference="caster_left">
     <material>Gazebo/Grey</material>
-    <mu1>0.01</mu1>
-    <mu2>0.01</mu2>
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
     <kp>1000000.0</kp>
     <kd>100.0</kd>
   </gazebo>
 
   <gazebo reference="caster_right">
     <material>Gazebo/Grey</material>
-    <mu1>0.01</mu1>
-    <mu2>0.01</mu2>
+    <mu1>0.1</mu1>
+    <mu2>0.1</mu2>
     <kp>1000000.0</kp>
     <kd>100.0</kd>
   </gazebo>
@@ -57,8 +65,9 @@
       <wheel_diameter>0.10</wheel_diameter>
 
       <!-- Encoder odom from joints (more consistent wheel "ticks"/integration) -->
-      <max_wheel_torque>8.0</max_wheel_torque>
-      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <max_wheel_torque>20.0</max_wheel_torque>
+      <!-- 0 = apply target wheel speed immediately (avoids residual ramp creep) -->
+      <max_wheel_acceleration>0.0</max_wheel_acceleration>
 
       <command_topic>cmd_vel</command_topic>
       <publish_odom>true</publish_odom>
