@@ -1,10 +1,10 @@
 import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration
+from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 
@@ -20,10 +20,10 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
     gazebo = LaunchConfiguration('gazebo', default='true')
     rviz = LaunchConfiguration('rviz', default='true')
-    teleop = LaunchConfiguration('teleop', default='true')
+    teleop = LaunchConfiguration('teleop', default='false')
     slam = LaunchConfiguration('slam', default='false')
     autonav = LaunchConfiguration('autonav', default='true')
-    # Default off so a plain bringup is Gazebo + RViz + teleop + Nav2
+    # Default off so a plain bringup is Gazebo + RViz + Nav2
     vision = LaunchConfiguration('vision', default='false')
     autonomy = LaunchConfiguration('autonomy', default='false')
 
@@ -34,8 +34,8 @@ def generate_launch_description():
     declare_rviz_cmd = DeclareLaunchArgument(
         'rviz', default_value='true', description='Whether to start RViz visualization')
     declare_teleop_cmd = DeclareLaunchArgument(
-        'teleop', default_value='true',
-        description='Whether to open keyboard teleop in a new terminal')
+        'teleop', default_value='false',
+        description='Unused for nav; mapping teleop auto-starts when slam:=true and autonav:=false')
     declare_slam_cmd = DeclareLaunchArgument(
         'slam', default_value='false',
         description='Whether to run SLAM mapping instead of AMCL localization')
@@ -48,6 +48,13 @@ def generate_launch_description():
         'autonomy', default_value='false',
         description='Whether to launch auto-docking and lifter nodes')
 
+    default_world = os.path.join(pkg_gazebo, 'worlds', 'warehouse_pallets.world')
+    world = LaunchConfiguration('world', default=default_world)
+    declare_world_cmd = DeclareLaunchArgument(
+        'world',
+        default_value=default_world,
+        description='Gazebo world. Default warehouse_pallets.world; restore with .../warehouse.world')
+
     # 1. Gazebo Simulation & Spawner (GUI on)
     gazebo_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -57,42 +64,61 @@ def generate_launch_description():
         launch_arguments={
             'use_sim_time': use_sim_time,
             'gui': 'true',
+            'world': world,
         }.items()
     )
 
     # 2. SLAM Mapping (active when slam:=true)
-    slam_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_nav, 'launch', 'slam.launch.py')
-        ),
-        condition=IfCondition(slam),
-        launch_arguments={'use_sim_time': use_sim_time}.items()
+    # Delay until /clock exists — otherwise lifecycle nodes stay unconfigured
+    # and the "map" TF frame never appears.
+    slam_launch = TimerAction(
+        period=8.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'slam.launch.py')
+                ),
+                condition=IfCondition(slam),
+                launch_arguments={'use_sim_time': use_sim_time}.items()
+            )
+        ],
     )
 
     # 3. AMCL Localization (active when slam:=false)
     # Avoid arg name 'params_file' — conflicts with gazebo_ros gzserver.launch.py
-    localization_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_nav, 'launch', 'localization.launch.py')
-        ),
-        condition=UnlessCondition(slam),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'localization_params_file': os.path.join(pkg_nav, 'config', 'nav2_params.yaml'),
-            'map': os.path.join(pkg_nav, 'maps', 'warehouse_map.yaml'),
-        }.items()
+    localization_launch = TimerAction(
+        period=8.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'localization.launch.py')
+                ),
+                condition=UnlessCondition(slam),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'localization_params_file': os.path.join(pkg_nav, 'config', 'nav2_params.yaml'),
+                    'map': os.path.join(pkg_nav, 'maps', 'warehouse_map.yaml'),
+                }.items()
+            )
+        ],
     )
 
     # 4. Nav2 Navigation Stack (Planners, Controllers, BT)
-    navigation_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(pkg_nav, 'launch', 'navigation.launch.py')
-        ),
-        condition=IfCondition(autonav),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'nav_params_file': os.path.join(pkg_nav, 'config', 'nav2_params.yaml'),
-        }.items()
+    # Start after localization so costmaps can get map→base TF
+    navigation_launch = TimerAction(
+        period=12.0,
+        actions=[
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    os.path.join(pkg_nav, 'launch', 'navigation.launch.py')
+                ),
+                condition=IfCondition(autonav),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'nav_params_file': os.path.join(pkg_nav, 'config', 'nav2_params.yaml'),
+                }.items()
+            )
+        ],
     )
 
     # 5. Vision Processing Pipeline
@@ -122,7 +148,7 @@ def generate_launch_description():
         condition=IfCondition(rviz)
     )
 
-    # 8. Mux Nav2 + teleop onto /cmd_vel (teleop wins while keys are pressed)
+    # 8. Nav2 only: /cmd_vel_nav → /cmd_vel (no teleop on this path)
     twist_mux_node = Node(
         package='twist_mux',
         executable='twist_mux',
@@ -133,22 +159,28 @@ def generate_launch_description():
             {'use_sim_time': use_sim_time},
         ],
         remappings=[('cmd_vel_out', '/cmd_vel')],
+        condition=IfCondition(autonav),
     )
 
-    # 9. Hold-to-move keyboard teleop (unstamped Twist; release → stop)
+    # 9. Keyboard teleop → /cmd_vel for MAPPING only (never with autonav)
     teleop_bash = (
         f'source /opt/ros/humble/setup.bash && source {install_setup} && '
-        'echo "Hold-to-move teleop — click this window"; '
+        'echo "Mapping teleop → /cmd_vel — click this window"; '
         'echo "Hold i/j/k/l to drive, release to stop"; '
         'ros2 run custom_warehouse_robot_navigation teleop_hold.py '
-        '--ros-args -r cmd_vel:=/cmd_vel_teleop '
+        '--ros-args -r cmd_vel:=/cmd_vel '
         '-p speed:=0.35 -p turn:=0.8 -p release_timeout:=0.25; '
         'exec bash'
     )
     teleop_terminal = ExecuteProcess(
         cmd=['gnome-terminal', '--', 'bash', '-c', teleop_bash],
         output='screen',
-        condition=IfCondition(teleop)
+        # Only when mapping (slam) and not navigating
+        condition=IfCondition(
+            PythonExpression([
+                "'", slam, "' == 'true' and '", autonav, "' == 'false'"
+            ])
+        )
     )
 
     return LaunchDescription([
@@ -160,6 +192,7 @@ def generate_launch_description():
         declare_autonav_cmd,
         declare_vision_cmd,
         declare_autonomy_cmd,
+        declare_world_cmd,
         gazebo_launch,
         slam_launch,
         localization_launch,

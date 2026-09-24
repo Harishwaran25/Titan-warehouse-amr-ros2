@@ -1,0 +1,115 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <model name="pallet_stack">
+    <!-- Static scenery stock: looks real, cheap for physics -->
+    <static>true</static>
+    <link name="link">
+
+      <!-- Euro pallet deck -->
+      <visual name="deck_vis">
+        <pose>0 0 0.13 0 0 0</pose>
+        <geometry><box><size>1.20 0.80 0.025</size></box></geometry>
+        <material><ambient>0.76 0.60 0.42 1</ambient><diffuse>0.76 0.60 0.42 1</diffuse></material>
+      </visual>
+      <collision name="deck_col">
+        <pose>0 0 0.13 0 0 0</pose>
+        <geometry><box><size>1.20 0.80 0.025</size></box></geometry>
+      </collision>
+
+      <visual name="runner_l_vis">
+        <pose>0 0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_l_col">
+        <pose>0 0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+      <visual name="runner_m_vis">
+        <pose>0 0 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_m_col">
+        <pose>0 0 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+      <visual name="runner_r_vis">
+        <pose>0 -0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+        <material><ambient>0.65 0.50 0.35 1</ambient><diffuse>0.65 0.50 0.35 1</diffuse></material>
+      </visual>
+      <collision name="runner_r_col">
+        <pose>0 -0.35 0.06 0 0 0</pose>
+        <geometry><box><size>1.20 0.10 0.10</size></box></geometry>
+      </collision>
+
+      <!-- Layer 1 cartons -->
+      <visual name="box_a_vis">
+        <pose>-0.28 0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.78 0.62 0.38 1</ambient><diffuse>0.82 0.66 0.40 1</diffuse></material>
+      </visual>
+      <collision name="box_a_col">
+        <pose>-0.28 0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+      <visual name="box_b_vis">
+        <pose>0.28 0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.72 0.55 0.32 1</ambient><diffuse>0.76 0.58 0.35 1</diffuse></material>
+      </visual>
+      <collision name="box_b_col">
+        <pose>0.28 0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+      <visual name="box_c_vis">
+        <pose>-0.28 -0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.70 0.52 0.30 1</ambient><diffuse>0.74 0.56 0.33 1</diffuse></material>
+      </visual>
+      <collision name="box_c_col">
+        <pose>-0.28 -0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+      <visual name="box_d_vis">
+        <pose>0.28 -0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.80 0.64 0.40 1</ambient><diffuse>0.84 0.68 0.42 1</diffuse></material>
+      </visual>
+      <collision name="box_d_col">
+        <pose>0.28 -0.18 0.38 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+
+      <!-- Layer 2 cartons -->
+      <visual name="box_e_vis">
+        <pose>-0.28 0.18 0.84 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.68 0.50 0.28 1</ambient><diffuse>0.72 0.54 0.32 1</diffuse></material>
+      </visual>
+      <collision name="box_e_col">
+        <pose>-0.28 0.18 0.84 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+      <visual name="box_f_vis">
+        <pose>0.28 0.18 0.84 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+        <material><ambient>0.75 0.58 0.35 1</ambient><diffuse>0.79 0.62 0.38 1</diffuse></material>
+      </visual>
+      <collision name="box_f_col">
+        <pose>0.28 0.18 0.84 0 0 0</pose>
+        <geometry><box><size>0.55 0.38 0.45</size></box></geometry>
+      </collision>
+      <visual name="box_g_vis">
+        <pose>0.0 -0.18 0.84 0 0 0</pose>
+        <geometry><box><size>1.05 0.38 0.45</size></box></geometry>
+        <material><ambient>0.66 0.48 0.26 1</ambient><diffuse>0.70 0.52 0.30 1</diffuse></material>
+      </visual>
+      <collision name="box_g_col">
+        <pose>0.0 -0.18 0.84 0 0 0</pose>
+        <geometry><box><size>1.05 0.38 0.45</size></box></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

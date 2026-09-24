@@ -19,6 +19,7 @@ source "${ROOT}/install/setup.bash"
 
 export GAZEBO_MODEL_DATABASE_URI=""
 
-echo "Launching warehouse bringup (Gazebo + RViz + teleop + Nav2)..."
+echo "Launching warehouse bringup (Gazebo pallet world + RViz + Nav2)..."
+echo "  Restore previous world with: world:=.../custom_warehouse_robot_gazebo/worlds/warehouse.world"
 exec ros2 launch custom_warehouse_robot_navigation warehouse_bringup.launch.py \
-  slam:=false autonav:=true teleop:=true vision:=false autonomy:=false
+  slam:=false autonav:=true teleop:=false vision:=false autonomy:=false

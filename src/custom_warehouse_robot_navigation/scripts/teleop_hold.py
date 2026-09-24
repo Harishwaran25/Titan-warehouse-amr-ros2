@@ -24,13 +24,13 @@ MOVE = {
 }
 
 HELP = """
-Hold-to-move teleop (unstamped /cmd_vel_teleop)
-----------------------------------------------
+Hold-to-move teleop (publishes /cmd_vel — for mapping)
+----------------------------------------------------
    u  i  o
    j  k  l
    m  ,  .
 
-Hold a key to move, release to stop.
+Hold a key to drive, release to stop.
 q/z : faster/slower    CTRL-C : quit
 """
 
@@ -47,6 +47,8 @@ class HoldTeleop(Node):
         self._lin = 0.0
         self._ang = 0.0
         self._last_key_time = self.get_clock().now()
+        # After a move, publish one zero then go silent (no continuous zero flood).
+        self._was_moving = False
         self.create_timer(1.0 / self.rate_hz, self._on_timer)
 
     def handle_key(self, key: str):
@@ -74,12 +76,18 @@ class HoldTeleop(Node):
     def _on_timer(self):
         now = self.get_clock().now()
         age = (now - self._last_key_time).nanoseconds * 1e-9
-        msg = geometry_msgs.msg.Twist()
-        if age <= self.release_timeout and (self._lin != 0.0 or self._ang != 0.0):
+        moving = age <= self.release_timeout and (self._lin != 0.0 or self._ang != 0.0)
+        if moving:
+            msg = geometry_msgs.msg.Twist()
             msg.linear.x = self._lin * self.speed
             msg.angular.z = self._ang * self.turn
-        # else leave zeros → stop on release
-        self.pub.publish(msg)
+            self.pub.publish(msg)
+            self._was_moving = True
+        elif self._was_moving:
+            # Release: one zero to stop, then silence.
+            self.pub.publish(geometry_msgs.msg.Twist())
+            self._was_moving = False
+        # idle: do not publish
 
     def stop(self):
         self.pub.publish(geometry_msgs.msg.Twist())

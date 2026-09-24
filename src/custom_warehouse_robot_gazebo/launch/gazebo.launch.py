@@ -16,6 +16,14 @@ def generate_launch_description():
     gazebo_models_path = os.path.join(pkg_robot_gazebo, 'models')
     desc_share = pkg_robot_desc
 
+    # AWS RoboMaker shelves/walls/clutter (optional; used by warehouse_pallets.world)
+    aws_models_path = ''
+    try:
+        aws_share = get_package_share_directory('aws_robomaker_small_warehouse_world')
+        aws_models_path = os.path.join(aws_share, 'models')
+    except Exception:
+        pass
+
     # Always keep Gazebo-11 system media/models/plugins. Overwriting RESOURCE_PATH
     # with only the robot package breaks gzclient (Camera shared_ptr assert).
     system_model = '/usr/share/gazebo-11/models'
@@ -26,6 +34,7 @@ def generate_launch_description():
         os.environ.get('GAZEBO_MODEL_PATH', ''),
         system_model,
         gazebo_models_path,
+        aws_models_path,
     ]))
     resource_path = ':'.join(filter(None, [
         os.environ.get('GAZEBO_RESOURCE_PATH', ''),
@@ -37,21 +46,27 @@ def generate_launch_description():
         system_plugin,
     ]))
 
-    world_path = os.path.join(pkg_robot_gazebo, 'worlds', 'warehouse.world')
+    # Default: pallet-rich AWS-based world. Restore old layout with world:=warehouse.world
+    default_world = os.path.join(pkg_robot_gazebo, 'worlds', 'warehouse_pallets.world')
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
+    world = LaunchConfiguration('world', default=default_world)
     x_pose = LaunchConfiguration('x_pose', default='0.0')
-    y_pose = LaunchConfiguration('y_pose', default='-5.5')
+    y_pose = LaunchConfiguration('y_pose', default='-5.0')
     z_pose = LaunchConfiguration('z_pose', default='0.08')
     yaw_pose = LaunchConfiguration('yaw_pose', default='0.0')
     gui = LaunchConfiguration('gui', default='true')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time', default_value='true', description='Use sim time')
+    declare_world_cmd = DeclareLaunchArgument(
+        'world',
+        default_value=default_world,
+        description='Gazebo world file. Use warehouse.world to restore the previous layout.')
     declare_x_cmd = DeclareLaunchArgument(
         'x_pose', default_value='0.0', description='Initial X position')
     declare_y_cmd = DeclareLaunchArgument(
-        'y_pose', default_value='-5.5', description='Initial Y position')
+        'y_pose', default_value='-5.0', description='Initial Y position')
     declare_z_cmd = DeclareLaunchArgument(
         'z_pose', default_value='0.08', description='Initial Z position')
     declare_yaw_cmd = DeclareLaunchArgument(
@@ -75,7 +90,7 @@ def generate_launch_description():
         PythonLaunchDescriptionSource(
             os.path.join(pkg_gazebo_ros, 'launch', 'gzserver.launch.py')
         ),
-        launch_arguments={'world': world_path}.items()
+        launch_arguments={'world': world}.items()
     )
 
     # Start GUI after world + spawn so rendering camera initializes cleanly
@@ -116,6 +131,7 @@ def generate_launch_description():
         set_plugin_path_cmd,
         set_no_db_cmd,
         declare_use_sim_time_cmd,
+        declare_world_cmd,
         declare_x_cmd,
         declare_y_cmd,
         declare_z_cmd,

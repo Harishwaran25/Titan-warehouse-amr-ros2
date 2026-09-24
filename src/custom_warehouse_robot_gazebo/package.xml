@@ -11,6 +11,7 @@
 
   <exec_depend>custom_warehouse_robot_description</exec_depend>
   <exec_depend>gazebo_ros</exec_depend>
+  <exec_depend>aws_robomaker_small_warehouse_world</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -52,7 +52,7 @@
       <direction>-0.3 0.2 -1.0</direction>
     </light>
 
-    <!-- High-Bay Warehouse Ceiling Lights -->
+    <!-- High-Bay Warehouse Ceiling Lights
     <light name="bay_light_1" type="point">
       <pose>-4 2 6 0 0 0</pose>
       <diffuse>0.7 0.7 0.75 1</diffuse>
@@ -83,7 +83,7 @@
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation><range>25</range><constant>0.4</constant><linear>0.03</linear><quadratic>0.005</quadratic></attenuation>
       <cast_shadows>false</cast_shadows>
-    </light>
+    </light> -->
 
     <!-- Ground Floor -->
     <model name="ground_plane">
