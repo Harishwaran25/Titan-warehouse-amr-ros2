@@ -11,6 +11,7 @@ install(
 install(PROGRAMS
   scripts/initialpose_to_gazebo.py
   scripts/teleop_hold.py
+  scripts/cmd_vel_idle.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

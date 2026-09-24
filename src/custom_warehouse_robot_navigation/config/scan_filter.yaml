@@ -1,0 +1,39 @@
+# LaserScan self-filter — drops returns from the robot chassis / body.
+# Input:  /scan
+# Output: /scan_filtered  (Nav2 / RViz should use this)
+#
+# Box matches nav2 footprint [[±0.43, ±0.28]] with padding, in base_footprint.
+# Range floor rejects residual near-body hits the box misses (mast/forks).
+
+scan_to_scan_filter_chain:
+  ros__parameters:
+    filter1:
+      name: chassis_box
+      type: laser_filters/LaserScanBoxFilter
+      params:
+        box_frame: base_footprint
+        min_x: -0.50
+        max_x: 0.50
+        min_y: -0.35
+        max_y: 0.35
+        min_z: -0.10
+        max_z: 0.55
+        # false = remove points INSIDE the box (robot body)
+        invert: false
+
+    filter2:
+      name: near_range
+      type: laser_filters/LaserScanRangeFilter
+      params:
+        use_message_range_limits: false
+        lower_threshold: 0.40
+        upper_threshold: 25.0
+        lower_replacement_value: .nan
+        upper_replacement_value: .nan
+
+    filter3:
+      name: footprint_circle
+      type: laser_filters/LaserScanFootprintFilter
+      params:
+        # Circumscribed radius of chassis footprint (~0.51) + margin
+        inscribed_radius: 0.55

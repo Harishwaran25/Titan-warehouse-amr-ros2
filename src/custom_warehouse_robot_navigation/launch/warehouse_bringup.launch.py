@@ -105,8 +105,9 @@ def generate_launch_description():
 
     # 4. Nav2 Navigation Stack (Planners, Controllers, BT)
     # Start after localization so costmaps can get map→base TF
+    # (localization configure/activate can take >4s under load; keep a wide gap)
     navigation_launch = TimerAction(
-        period=12.0,
+        period=22.0,
         actions=[
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
@@ -162,6 +163,33 @@ def generate_launch_description():
         condition=IfCondition(autonav),
     )
 
+    # Always publish zero on /cmd_vel_idle (low priority) so diff_drive
+    # does not keep the last Nav2 velocity after cmd_vel_nav times out.
+    cmd_vel_idle_node = Node(
+        package='custom_warehouse_robot_navigation',
+        executable='cmd_vel_idle.py',
+        name='cmd_vel_idle',
+        output='screen',
+        parameters=[{'use_sim_time': use_sim_time}],
+        condition=IfCondition(autonav),
+    )
+
+    # Filter /scan → /scan_filtered (drop chassis / near-body self-hits)
+    scan_filter_node = Node(
+        package='laser_filters',
+        executable='scan_to_scan_filter_chain',
+        name='scan_to_scan_filter_chain',
+        output='screen',
+        parameters=[
+            os.path.join(pkg_nav, 'config', 'scan_filter.yaml'),
+            {'use_sim_time': use_sim_time},
+        ],
+        remappings=[
+            ('scan', '/scan'),
+            ('scan_filtered', '/scan_filtered'),
+        ],
+    )
+
     # 9. Keyboard teleop → /cmd_vel for MAPPING only (never with autonav)
     teleop_bash = (
         f'source /opt/ros/humble/setup.bash && source {install_setup} && '
@@ -201,5 +229,7 @@ def generate_launch_description():
         autonomy_launch,
         rviz_node,
         twist_mux_node,
+        cmd_vel_idle_node,
+        scan_filter_node,
         teleop_terminal
     ])

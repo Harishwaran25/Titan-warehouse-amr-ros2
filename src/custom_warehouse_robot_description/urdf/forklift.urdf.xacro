@@ -22,9 +22,11 @@
   <xacro:property name="wheel_r" value="0.05"/>
   <xacro:property name="wheel_w" value="0.045"/>
 
-  <!-- Casters: axle at y=0.245, z=-0.0481; ground is z=-0.07 -->
+  <!-- Casters: wheel centre + rigid stem pivot (swivel about Z at the rod) -->
   <xacro:property name="caster_y" value="0.245"/>
   <xacro:property name="caster_z" value="-0.0481"/>
+  <!-- Stem/rod mount on chassis — MUST be the swivel axis so the rod stays rigid -->
+  <xacro:property name="caster_stem_z" value="-0.010"/>
   <xacro:property name="caster_r" value="0.0219"/>
 
   <!-- Fork slider origin (Fusion Slider 48) -->
@@ -95,31 +97,51 @@
       <origin xyz="${px-p0x} 0 0" rpy="0 0 0"/>
       <!-- same axis for both wheels = ROS +Y, so positive velocity drives forward -->
       <axis xyz="${sin(model_yaw)} ${cos(model_yaw)} 0"/>
-      <!-- Damping light enough that diff-drive motors can still accelerate -->
-      <dynamics damping="0.05" friction="0.02"/>
+      <!-- Enough damping to stop free-roll when cmd_vel is zero -->
+      <dynamics damping="0.8" friction="0.15"/>
     </joint>
   </xacro:macro>
 
-  <!-- Fixed caster: sphere collision. Make it frictionless in the simulator. -->
+  <!-- Swivel caster: yaw about the rigid stem/rod (NOT the wheel centre).
+       Wheel is a fixed offset below the stem so the rod cannot detach. -->
   <xacro:macro name="caster" params="name mesh px">
+    <link name="${name}_yaw">
+      <inertial>
+        <mass value="0.05"/>
+        <inertia ixx="2e-5" iyy="2e-5" izz="2e-5" ixy="0" ixz="0" iyz="0"/>
+      </inertial>
+    </link>
+    <joint name="${name}_swivel_joint" type="continuous">
+      <parent link="chassis"/>
+      <child link="${name}_yaw"/>
+      <origin xyz="${px-p0x} ${caster_y-p0y} ${caster_stem_z-p0z}" rpy="0 0 0"/>
+      <axis xyz="0 0 1"/>
+      <!-- Higher damping: stops settle-kick and keeps stem feeling rigid -->
+      <dynamics damping="1.5" friction="0.2"/>
+    </joint>
     <link name="${name}">
-      <xacro:mesh_visual file="${mesh}" px="${px}" py="${caster_y}" pz="${caster_z}"/>
+      <!-- Mesh authored in Fusion world frame; keep that offset from stem frame -->
+      <visual>
+        <origin xyz="${-px} ${-caster_y} ${-caster_stem_z}" rpy="0 0 0"/>
+        <geometry><mesh filename="${mesh_dir}/${mesh}.stl"/></geometry>
+      </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 ${caster_z - caster_stem_z}" rpy="0 0 0"/>
         <geometry><sphere radius="${caster_r}"/></geometry>
       </collision>
       <inertial>
-        <origin xyz="0 -0.012 0.0128" rpy="0 0 0"/>
+        <origin xyz="0 0 ${caster_z - caster_stem_z}" rpy="0 0 0"/>
         <mass value="${caster_mass}"/>
         <inertia ixx="${0.4*caster_mass*caster_r*caster_r}" ixy="0" ixz="0"
                  iyy="${0.4*caster_mass*caster_r*caster_r}" iyz="0"
                  izz="${0.4*caster_mass*caster_r*caster_r}"/>
       </inertial>
     </link>
+    <!-- Wheel body rigidly bolted to the swivel fork/rod -->
     <joint name="${name}_joint" type="fixed">
-      <parent link="chassis"/>
+      <parent link="${name}_yaw"/>
       <child link="${name}"/>
-      <origin xyz="${px-p0x} ${caster_y-p0y} ${caster_z-p0z}" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
   </xacro:macro>
 
@@ -179,8 +201,8 @@
   </joint>
 
   <!-- ================= LIDAR =================
-       lidar_base holds the mesh (Fusion-aligned); lidar_link is the ROS-aligned
-       sensor frame. Move lidar_link up/down to the real scan plane if needed. -->
+       Rotate the FULL mesh assembly 180° yaw (housing + mounting sticks together).
+       lidar_link keeps Fusion→ROS align relative to that flipped mesh. -->
   <link name="lidar_base">
     <xacro:mesh_visual file="lidar_link" px="0.2093" py="-0.1107" pz="0.3437"/>
     <collision>
@@ -192,7 +214,7 @@
   <joint name="lidar_base_joint" type="fixed">
     <parent link="chassis"/>
     <child link="lidar_base"/>
-    <origin xyz="${0.2093-p0x} ${-0.1107-p0y} ${0.3437-p0z}" rpy="0 0 0"/>
+    <origin xyz="${0.2093-p0x} ${-0.1107-p0y} ${0.3437-p0z}" rpy="0 0 ${pi}"/>
   </joint>
   <link name="lidar_link"/>
   <joint name="lidar_joint" type="fixed">

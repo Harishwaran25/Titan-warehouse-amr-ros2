@@ -53,7 +53,7 @@ def generate_launch_description():
     world = LaunchConfiguration('world', default=default_world)
     x_pose = LaunchConfiguration('x_pose', default='0.0')
     y_pose = LaunchConfiguration('y_pose', default='-5.0')
-    z_pose = LaunchConfiguration('z_pose', default='0.08')
+    z_pose = LaunchConfiguration('z_pose', default='0.05')
     yaw_pose = LaunchConfiguration('yaw_pose', default='0.0')
     gui = LaunchConfiguration('gui', default='true')
 
@@ -68,7 +68,8 @@ def generate_launch_description():
     declare_y_cmd = DeclareLaunchArgument(
         'y_pose', default_value='-5.0', description='Initial Y position')
     declare_z_cmd = DeclareLaunchArgument(
-        'z_pose', default_value='0.08', description='Initial Z position')
+        'z_pose', default_value='0.05',
+        description='Initial Z (keep near wheel radius to avoid spawn roll)')
     declare_yaw_cmd = DeclareLaunchArgument(
         'yaw_pose', default_value='0.0', description='Initial Yaw orientation')
     declare_gui_cmd = DeclareLaunchArgument(
@@ -125,6 +126,28 @@ def generate_launch_description():
         ]
     )
 
+    # Snap pose back after physics settle (casters/impact can shove the robot)
+    settle_reset_cmd = TimerAction(
+        period=2.5,
+        actions=[
+            Node(
+                package='custom_warehouse_robot_gazebo',
+                executable='spawn_settle_reset.py',
+                name='spawn_settle_reset',
+                output='screen',
+                parameters=[{
+                    'use_sim_time': use_sim_time,
+                    'entity': 'titan_warehouse_amr',
+                    'x': 0.0,
+                    'y': -5.0,
+                    'z': 0.05,
+                    'yaw': 0.0,
+                    'delay': 2.5,
+                }],
+            )
+        ]
+    )
+
     return LaunchDescription([
         set_model_path_cmd,
         set_resource_path_cmd,
@@ -140,5 +163,6 @@ def generate_launch_description():
         robot_state_publisher_cmd,
         gzserver_cmd,
         spawn_robot_cmd,
+        settle_reset_cmd,
         gzclient_cmd,
     ])

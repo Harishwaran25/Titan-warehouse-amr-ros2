@@ -9,6 +9,12 @@ twist_mux:
         topic: cmd_vel_nav
         timeout: 0.5
         priority: 100
+      # Always-on zeros so Gazebo does not hold the last non-zero cmd_vel
+      # when Nav2 / teleop go quiet (twist_mux otherwise stops publishing).
+      idle:
+        topic: cmd_vel_idle
+        timeout: 0.5
+        priority: 1
     locks:
       pause:
         topic: pause_navigation

@@ -1,0 +1,25 @@
+# Gazebo ray lidar (laser_scanner on lidar_link)
+# Angles: 0 = +X (ROS forward), increasing CCW. Degrees map 1:1 to radians below.
+lidar:
+  topic: scan
+  frame_name: lidar_link
+  update_rate: 15.0
+  visualize: false
+
+  # Horizontal FOV: 90° → 270° (+Y / left, through rear, to -Y / right)
+  samples: 360
+  resolution: 1.0
+  min_angle_deg: 90.0
+  max_angle_deg: 270.0
+  min_angle: 1.5707963267948966   # π/2
+  max_angle: 4.71238898038469     # 3π/2
+
+  range:
+    min: 0.40
+    max: 25.0
+    resolution: 0.01
+
+  noise:
+    type: gaussian
+    mean: 0.0
+    stddev: 0.005
